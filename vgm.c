@@ -352,10 +352,8 @@ void* _vgm_play_thread(vgm_t *vgm) {
             clock_gettime(CLOCK_MONOTONIC, &tp_current);
             elapsed_time = _timespec_span(&tp_origin, &tp_current);
         }
-        // printf("%0.000000f : %0.000000f\n", elapsed_time, next_time);
 
         if (command == 0x67) {
-            printf("timer reset\n");
             clock_gettime(CLOCK_MONOTONIC, &tp_origin);
             vgm->samples = 0;
         }
@@ -583,8 +581,8 @@ int _vgm_67(vgm_t *vgm, uint8_t *command) {
     if ((rc = _vgm_read_uint8(vgm, &tt)) != VGM_OK) return rc;
     if ((rc = _vgm_read_uint32(vgm, &sz)) != VGM_OK) return rc;
 
-    printf("Data block type: 0x%02X\n", tt);
-    printf("Size of data: 0x%08X\n", sz);
+    // printf("Data block type: 0x%02X\n", tt);
+    // printf("Size of data: 0x%08X\n", sz);
 
     if (tt == 0x00) {
         _vgm_datablock = &vgm->buf[vgm->pos];
@@ -605,9 +603,9 @@ int _vgm_67(vgm_t *vgm, uint8_t *command) {
         if ((rc = _vgm_read_uint32(vgm, &rom_start)) != VGM_OK) return rc;
         rom_end = rom_start + sz - 8 - 1;
 
-        printf("ROM size: %08X\n", rom_size);
-        printf("ROM start address: %08X\n", rom_start);
-        printf("ROM end address  : %08X\n", rom_end);
+        // printf("ROM size: %08X\n", rom_size);
+        // printf("ROM start address: %08X\n", rom_start);
+        // printf("ROM end address  : %08X\n", rom_end);
 
         if (tt == 0x81) {
             uint32_t start_addr = rom_start >> 2;
@@ -653,14 +651,10 @@ int _vgm_67(vgm_t *vgm, uint8_t *command) {
             vgm_handler(Y8950, 0, 0x0b, end_addr & 0xff);
             vgm_handler(Y8950, 0, 0x0c, (end_addr >> 8) & 0xff);
 
-            printf("ADPCM begin\n");
-
             for (int i = 0; i < sz - 8; i++) {
                 if ((rc = _vgm_read_uint8(vgm, &rom_data)) != VGM_OK) return rc;
                 vgm_handler(Y8950, 0, 0x0f, rom_data);
             }
-
-            printf("ADPCM end\n");
 
             vgm_handler(Y8950, 0, 0x07, 0x00);
             vgm_handler(Y8950, 0, 0x04, 0x78);
