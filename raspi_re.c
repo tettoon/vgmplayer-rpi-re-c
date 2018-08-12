@@ -21,11 +21,13 @@ int _re_digitalRead(int);
 /*
  *
  */
-void re_init() {
+int re_init() {
 
+    int rc;
     int i;
 
-    wiringPiSetup();
+    rc = wiringPiSetup();
+    if (rc != 0) return 1;
 
     pinMode(PIN_IRQ, INPUT);
     pullUpDnControl(PIN_IRQ, PUD_UP);
@@ -52,6 +54,8 @@ void re_init() {
         digitalWrite(PIN_D[i], LOW);
     }
     _re_data_direction = OUTPUT;
+
+    return 0;
 }
 
 /*
