@@ -36,7 +36,7 @@ vgm_t *vgm;
 
 void print_usage(FILE *f) {
 
-    fprintf(f, "Usage: vgmplay [option] <vgm_file>\n");
+    fprintf(f, "Usage: vgmplayer [option] <vgm_file>\n");
     fprintf(f, "\n");
     fprintf(f, "-h, --help          Print this message.\n");
     fprintf(f, "\n");
@@ -208,12 +208,18 @@ int main(int argc, char *argv[]) {
     }
     else
     if (_module_id == -1) {
-        fprintf(stderr, "Invalid or unsupported module name\n");
+        fprintf(stderr, "Invalid or unsupported module name.\n");
         print_usage(stderr);
         return EXIT_FAILURE;
     }
 
     vgm_handler = module_handler;
+
+    rc = re_init();
+    if (rc != 0)  {
+        fprintf(stderr, "Initialization failed.\n");
+        return EXIT_FAILURE;
+    }
 
     re_reset();
     module_init(_module_id);
@@ -222,8 +228,6 @@ int main(int argc, char *argv[]) {
         print_usage(stderr);
         return EXIT_FAILURE;
     }
-
-    re_init();
 
     FILE *f;
     char *filename;

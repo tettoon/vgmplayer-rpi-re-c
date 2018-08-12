@@ -21,7 +21,7 @@
 #define PIN_D6   6
 #define PIN_D7   7
 
-void re_init();
+int re_init();
 void re_reset();
 void re_address(uint8_t);
 void re_write_data(uint8_t);
