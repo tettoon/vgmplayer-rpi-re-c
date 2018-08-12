@@ -36,7 +36,7 @@ vgm_t *vgm;
 
 void print_usage(FILE *f) {
 
-    fprintf(f, "Usage: vgmplay [option] <vgm_file>\n");
+    fprintf(f, "Usage: vgmplayer [option] <vgm_file>\n");
     fprintf(f, "\n");
     fprintf(f, "-h, --help          Print this message.\n");
     fprintf(f, "\n");
