@@ -17,6 +17,7 @@
 static struct option longopts[] = {
     {"help", no_argument, NULL, 'h'},
     {"module", required_argument, NULL, 'm'},
+    {"repeat", required_argument, NULL, 'r'},
     {0, 0, 0, 0}
 };
 
@@ -31,6 +32,7 @@ int copy_file(FILE *, FILE *);
 int gunzip_file(FILE *, FILE *);
 
 int _module_id;
+int _repeat_count;
 
 vgm_t *vgm;
 
@@ -43,6 +45,8 @@ void print_usage(FILE *f) {
     fprintf(f, "-m <name>, --module=<name>\n");
     fprintf(f, "                    Specify a module name.\n");
     fprintf(f, "                    e.g., AY8910, SN76489, YM2151, YM2413, YM2608, YM2612, YM3526, YM3812\n");
+    fprintf(f, "-r <count>, --repeat=<count>\n");
+    fprintf(f, "                    Specify a repeat count (>1).\n");
     fprintf(f, "\n");
 }
 
@@ -181,14 +185,21 @@ int main(int argc, char *argv[]) {
     int rc;
     int opt, opterr = 0;
     char *module_name = NULL;
+    _repeat_count = -1;
 
-    while ((opt = getopt_long(argc, argv, "hm:", longopts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "hm:r:", longopts, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_usage(stdout);
                 return 0;
             case 'm':
                 module_name = optarg;
+                break;
+            case 'r':
+                if (sscanf(optarg, "%d", &_repeat_count) == EOF) {
+                    print_usage(stderr);
+                    return EXIT_FAILURE;
+                }
                 break;
             default:
                 opterr = 1;
@@ -203,12 +214,19 @@ int main(int argc, char *argv[]) {
 
     _module_id = module_id(module_name);
     if (_module_id == 0) {
+        fprintf(stderr, "Module ID == 0\n");
         print_usage(stderr);
         return EXIT_FAILURE;
     }
     else
     if (_module_id == -1) {
         fprintf(stderr, "Invalid or unsupported module name.\n");
+        print_usage(stderr);
+        return EXIT_FAILURE;
+    }
+
+    if (_repeat_count != -1 && _repeat_count < 1) {
+        fprintf(stderr, "Repeat count must be greater than or equal to 1.\n");
         print_usage(stderr);
         return EXIT_FAILURE;
     }
@@ -426,6 +444,7 @@ int vgmplayer_play(FILE *f, const char *name) {
     }
 
     vgm = malloc(sizeof(vgm_t));
+    vgm->repeat = _repeat_count;
     vgm_load(vgm_buf, stbuf.st_size, vgm);
 
     rc = vgm_play(vgm);

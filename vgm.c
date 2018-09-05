@@ -149,6 +149,7 @@ int vgm_play(vgm_t *vgm) {
     if ((rc = _vgm_check_ident(vgm)) != VGM_OK) return rc;
 
     vgm->playing = 1;
+    vgm->_repeat = vgm->repeat;
 
     if ((rc = pthread_create(&thread, NULL, (void*) _vgm_play_thread, (void*) vgm)) != 0) {
         _vgm_seterr(vgm, VGM_EPTHREAD);
@@ -567,7 +568,18 @@ int _vgm_64(vgm_t *vgm, uint8_t *command) {
 }
 
 int _vgm_66(vgm_t *vgm, uint8_t *command) {
-    vgm->playing = 0;
+
+    if (vgm->header->loop_offset == 0) {
+        vgm->playing = 0;
+    }
+    else
+    if (vgm->repeat > 0 && --vgm->_repeat <= 0) {
+        vgm->playing = 0;
+    }
+    else
+    {
+        vgm->pos = vgm->header->loop_offset + 0xc;
+    }
     return VGM_OK;
 }
 

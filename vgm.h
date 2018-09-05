@@ -75,6 +75,8 @@ typedef struct vgm_t_ {
     int             buf_sz;
     int             pos;
     vgm_header_t    *header;
+    int             repeat;
+    int             _repeat;
     int             playing;
     uint32_t        frequency;
     uint32_t        samples;
