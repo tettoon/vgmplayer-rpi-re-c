@@ -578,7 +578,7 @@ int _vgm_66(vgm_t *vgm, uint8_t *command) {
     }
     else
     {
-        vgm->pos = vgm->header->loop_offset + 0xc;
+        vgm->pos = vgm->header->loop_offset + 0x1c;
     }
     return VGM_OK;
 }
