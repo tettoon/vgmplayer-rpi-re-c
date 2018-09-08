@@ -111,16 +111,16 @@ void write_ay8910(int n, uint8_t aa, uint8_t dd) {
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(!(n & 1));
+//    re_cs0(!(n & 1));
     delayMicroseconds(20);
 
     re_address(1);
     re_write_data(dd);
-    re_cs0(n & 1);
+//    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(!(n & 1));
+//    re_cs0(!(n & 1));
     delayMicroseconds(20);
 }
 
@@ -222,16 +222,16 @@ void write_ym2413(int n, uint8_t aa, uint8_t dd) {
     re_wr(0);
     re_cs0(n & 1);
     delayMicroseconds(1);
-    re_cs0(!(n & 1));
+//    re_cs0(!(n & 1));
     re_wr(1);
     delayMicroseconds(6);
 
     re_address(1);
     re_write_data(dd);
     re_wr(0);
-    re_cs0(n & 1);
+//    re_cs0(n & 1);
     delayMicroseconds(1);
-    re_cs0(!(n & 1));
+//    re_cs0(!(n & 1));
     re_wr(1);
     delayMicroseconds(30);
 }
