@@ -31,7 +31,7 @@ int vgmplayer_play(FILE *, const char *);
 int copy_file(FILE *, FILE *);
 int gunzip_file(FILE *, FILE *);
 
-int _module_id;
+int _module_id[2];
 int _repeat_count;
 
 vgm_t *vgm;
@@ -90,7 +90,7 @@ void module_handler(int module, int num, uint16_t ppaa, uint8_t dd) {
     int pp = ppaa >> 8;
     uint8_t aa = ppaa & 0xff;
 
-    if (module != _module_id) return;
+    if (module != _module_id[0]) return;
 
     switch (module) {
         case AY8910:
@@ -182,7 +182,7 @@ void module_mute(int module) {
 
 int main(int argc, char *argv[]) {
 
-    int rc;
+    int i, rc;
     int opt, opterr = 0;
     char *module_name = NULL;
     _repeat_count = -1;
@@ -212,6 +212,17 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    char* ptr;
+    i = 0;
+    ptr = strtok(module_name, ",");
+    _module_id[i++] = module_id(ptr);
+    while (ptr != NULL) {
+        ptr = strtok(module_name, ",");
+        if (ptr != NULL) {
+            _module_id[i++] = module_id(ptr);
+        }
+    }
+/*
     _module_id = module_id(module_name);
     if (_module_id == 0) {
         fprintf(stderr, "Module ID == 0\n");
@@ -224,6 +235,7 @@ int main(int argc, char *argv[]) {
         print_usage(stderr);
         return EXIT_FAILURE;
     }
+*/
 
     if (_repeat_count != -1 && _repeat_count < 1) {
         fprintf(stderr, "Repeat count must be greater than or equal to 1.\n");
@@ -240,7 +252,7 @@ int main(int argc, char *argv[]) {
     }
 
     re_reset();
-    module_init(_module_id);
+    module_init(_module_id[0]);
 
     if (optind == argc) {
         print_usage(stderr);
@@ -311,7 +323,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    module_mute(_module_id);
+    module_mute(_module_id[0]);
 
     return EXIT_SUCCESS;
 }
