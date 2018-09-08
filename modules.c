@@ -103,64 +103,71 @@ void mute_ym3812(int num) {
 
 void write_ay8910(int n, uint8_t aa, uint8_t dd) {
 
+    if (n < 0 || n >= 2) return;
+
     re_address(0);
     re_write_data(aa);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(20);
 
     re_address(1);
     re_write_data(dd);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(20);
 }
 
 void write_sn76489(int n, uint8_t dd) {
 
+    if (n < 0 || n >= 2) return;
+
+/*
     while (re_irq() == 0) {
     }
+*/
 
     re_address(0);
     re_write_data(dd);
     delayMicroseconds(1);
-    re_cs0(0);
+    re_cs0(n & 1);
     delayMicroseconds(1);
     re_wr(0);
     delayMicroseconds(10);
     re_wr(1);
     delayMicroseconds(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
+    delayMicroseconds(20);
 }
 
 void write_y8950(int n, uint8_t aa, uint8_t dd) {
 
     re_address(0);
     re_write_data(aa);
-    re_cs0(0);
+    re_cs0(n & 1);
     delayMicroseconds(5);
     re_wr(0);
     delayMicroseconds(5);
     re_wr(1);
     delayMicroseconds(5);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(26);
 
     re_address(1);
     re_write_data(dd);
-    re_cs0(0);
+    re_cs0(n & 1);
     delayMicroseconds(5);
     re_wr(0);
     delayMicroseconds(5);
     re_wr(1);
     delayMicroseconds(5);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     if (aa >= 0 && aa <= 0x1a) {
         delayMicroseconds(26);
     } else {
@@ -172,20 +179,20 @@ void write_ym2151(int n, uint8_t aa, uint8_t dd) {
 
     re_address(0);
     re_write_data(aa);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(24);
 
     re_address(1);
     re_write_data(dd);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(24);
 }
 
@@ -193,18 +200,18 @@ void write_ym2203(int n, uint8_t aa, uint8_t dd) {
 
     re_address(0);
     re_write_data(aa);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(10);
 
     re_address(1);
     re_write_data(dd);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(10);
 }
 
@@ -213,18 +220,18 @@ void write_ym2413(int n, uint8_t aa, uint8_t dd) {
     re_address(0);
     re_write_data(aa);
     re_wr(0);
-    re_cs0(0);
+    re_cs0(n & 1);
     delayMicroseconds(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     re_wr(1);
     delayMicroseconds(6);
 
     re_address(1);
     re_write_data(dd);
     re_wr(0);
-    re_cs0(0);
+    re_cs0(n & 1);
     delayMicroseconds(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     re_wr(1);
     delayMicroseconds(30);
 }
@@ -234,11 +241,11 @@ void write_ym2608(int n, int pp, uint8_t aa, uint8_t dd) {
     re_address(pp << 1);
     re_write_data(aa);
     delayMicroseconds(1);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     if (aa >=0x21 && aa <= 0xb6) {
         delayMicroseconds(3);  /* 17 cycles */
     }
@@ -254,11 +261,11 @@ void write_ym2608(int n, int pp, uint8_t aa, uint8_t dd) {
     re_address((pp << 1) | 1);
     re_write_data(dd);
     delayMicroseconds(1);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     if (aa >= 0x21 && aa <= 0x9e) {
         delayMicroseconds(12);  /* 83 cycles */
     }
@@ -284,18 +291,18 @@ void write_ym2612(int n, int pp, uint8_t aa, uint8_t dd) {
 
     re_address(pp << 1);
     re_write_data(aa);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(10);
 
     re_address((pp << 1) | 1);
     re_write_data(dd);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(10);
 }
 
@@ -303,20 +310,20 @@ void write_ym3526(int n, uint8_t aa, uint8_t dd) {
 
     re_address(0);
     re_write_data(aa);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(6);
 
     re_address(1);
     re_write_data(dd);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     if (aa >= 0 && aa <= 0x1a) {
         delayMicroseconds(6);
     } else {
@@ -328,20 +335,20 @@ void write_ym3812(int n, uint8_t aa, uint8_t dd) {
 
     re_address(0);
     re_write_data(aa);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     delayMicroseconds(6);
 
     re_address(1);
     re_write_data(dd);
-    re_cs0(0);
+    re_cs0(n & 1);
     re_wr(0);
     delayMicroseconds(1);
     re_wr(1);
-    re_cs0(1);
+    re_cs0(!(n & 1));
     if (aa >= 0 && aa <= 0x1a) {
         delayMicroseconds(6);
     } else {

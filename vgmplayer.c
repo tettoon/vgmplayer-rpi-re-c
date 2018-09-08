@@ -14,6 +14,8 @@
 #include "raspi_re.h"
 #include "modules.h"
 
+#define MODULE_COUNT 2
+
 static struct option longopts[] = {
     {"help", no_argument, NULL, 'h'},
     {"module", required_argument, NULL, 'm'},
@@ -23,15 +25,16 @@ static struct option longopts[] = {
 
 void print_usage(FILE *);
 void sigint_handler(int);
-int module_id(const char *);
+int module_name_to_id(const char *);
+void prepare_module_info(char *);
 void module_handler(int, int, uint16_t, uint8_t);
-void module_init(int);
-void module_mute(int);
+void module_init(void);
+void module_mute(void);
 int vgmplayer_play(FILE *, const char *);
 int copy_file(FILE *, FILE *);
 int gunzip_file(FILE *, FILE *);
 
-int _module_id[2];
+module_info_t _module_info[MODULE_COUNT];
 int _repeat_count;
 
 vgm_t *vgm;
@@ -54,7 +57,43 @@ void sigint_handler(int sig) {
     vgm->playing = 0;
 }
 
-int module_id(const char *module_name) {
+void prepare_module_info(char *module_names) {
+
+    int i, count;
+    char* p;
+    int slot_num = 0;
+
+    p = strtok(module_names, ",");
+    _module_info[0].slot_num  = 0;
+    _module_info[0].module_id = module_name_to_id(p);
+    _module_info[0].num       = 0;
+
+    for (slot_num = 1; slot_num < MODULE_COUNT; slot_num++) {
+        _module_info[slot_num].slot_num  = slot_num;
+        p = strtok(NULL, ",");
+        if (p == NULL) {
+            _module_info[slot_num].module_id = -1;
+            _module_info[slot_num].num       = -1;
+            continue;
+        }
+        count = 0;
+        _module_info[slot_num].module_id = module_name_to_id(p);
+        for (i = 0; i < slot_num - 1; i++) {
+            if (_module_info[i].module_id == _module_info[slot_num].module_id) {
+                count++;
+            }
+        }
+        _module_info[slot_num].num       = count;
+    }
+
+/*
+    for (slot_num = 0; slot_num < MODULE_COUNT; slot_num++) {
+        printf("#%d: module_id=$%02X (%d)\n", slot_num, _module_info[slot_num].module_id, _module_info[slot_num].num);
+    }
+*/
+}
+
+int module_name_to_id(const char *module_name) {
 
     int module = -1;
 
@@ -85,104 +124,131 @@ int module_id(const char *module_name) {
     return module;
 }
 
+int module_name_to_slot(int module_id, int num) {
+    int i, m_id;
+    int count = 0;
+    for (i = 0; i < MODULE_COUNT; i++) {
+        m_id = _module_info[i].module_id;
+        if (m_id >= 0 && m_id == module_id) {
+            if (count++ == num) return i;
+        }
+    }
+    return -1;
+}
+
 void module_handler(int module, int num, uint16_t ppaa, uint8_t dd) {
 
     int pp = ppaa >> 8;
     uint8_t aa = ppaa & 0xff;
 
-    if (module != _module_id[0]) return;
+    int i, slot_num;
+    slot_num = -1;
+    for (i = 0; i < MODULE_COUNT; i++) {
+        if (_module_info[i].module_id == module && _module_info[i].num == num) {
+            slot_num = i;
+            break;
+        }
+    }
+
+    if (slot_num < 0) return;
 
     switch (module) {
         case AY8910:
-            write_ay8910(num, aa, dd);
+            write_ay8910(slot_num, aa, dd);
             break;
         case SN76489:
-            write_sn76489(num, dd);
+            write_sn76489(slot_num, dd);
             break;
         case Y8950:
-            write_y8950(num, aa, dd);
+            write_y8950(slot_num, aa, dd);
             break;
         case YM2151:
-            write_ym2151(num, aa, dd);
+            write_ym2151(slot_num, aa, dd);
             break;
         case YM2203:
-            write_ym2203(num, aa, dd);
+            write_ym2203(slot_num, aa, dd);
             break;
         case YM2413:
-            write_ym2413(num, aa, dd);
+            write_ym2413(slot_num, aa, dd);
             break;
         case YM2608:
-            write_ym2608(num, pp, aa, dd);
+            write_ym2608(slot_num, pp, aa, dd);
             break;
         case YM2612:
-            write_ym2612(num, pp, aa, dd);
+            write_ym2612(slot_num, pp, aa, dd);
             break;
         case YM3526:
-            write_ym3526(num, aa, dd);
+            write_ym3526(slot_num, aa, dd);
             break;
         case YM3812:
-            write_ym3812(num, aa, dd);
+            write_ym3812(slot_num, aa, dd);
             break;
     }
 }
 
-void module_init(int module) {
+void module_init(void) {
 
-    if (module == 0) return;
-
-    if (module == YM2608) {
-        init_ym2608(0); 
+    int slot_num;
+    for (slot_num = 0; slot_num < MODULE_COUNT; slot_num++) {
+        if (_module_info[slot_num].module_id <= 0)
+            continue;
+        switch (_module_info[slot_num].module_id) {
+            case SN76489:
+                mute_sn76489(slot_num);
+            case YM2608:
+                init_ym2608(slot_num); 
+                break;
+        }
     }
+
 }
 
-void module_mute(int module) {
+void module_mute(void) {
 
-    if (module == 0) return;
+    int slot_num;
 
-    if (module == AY8910) {
-        mute_ay8910(0);
-    }
-    else
-    if (module == SN76489) {
-        mute_sn76489(0);
-    }
-    else
-    if (module == Y8950) {
-        mute_y8950(0);
-    }
-    else
-    if (module == YM2151) {
-        mute_ym2151(0);
-    }
-    else
-    if (module == YM2203) {
-        mute_ym2203(0);
-    }
-    else
-    if (module == YM2413) {
-        mute_ym2413(0);
-    }
-    else
-    if (module == YM2608) {
-        mute_ym2608(0);
-    }
-    else
-    if (module == YM2612) {
-        mute_ym2612(0);
-    }
-    else
-    if (module == YM3526) {
-        mute_ym3526(0);
-    }
-    else
-    if (module == YM3812) {
-        mute_ym3812(0);
+    for (slot_num = 0; slot_num < MODULE_COUNT; slot_num++) {
+        if (_module_info[slot_num].module_id <= 0)
+            continue;
+
+        switch (_module_info[slot_num].module_id) {
+            case AY8910:
+                mute_ay8910(slot_num);
+                break;
+            case SN76489:
+                mute_sn76489(slot_num);
+                break;
+            case Y8950:
+                mute_y8950(slot_num);
+                break;
+            case YM2151:
+                mute_ym2151(slot_num);
+                break;
+            case YM2203:
+                mute_ym2203(slot_num);
+                break;
+            case YM2413:
+                mute_ym2413(slot_num);
+                break;
+            case YM2608:
+                mute_ym2608(slot_num);
+                break;
+            case YM2612:
+                mute_ym2612(slot_num);
+                break;
+            case YM3526:
+                mute_ym3526(slot_num);
+                break;
+            case YM3812:
+                mute_ym3812(slot_num);
+                break;
+        }
     }
 }
 
 int main(int argc, char *argv[]) {
 
-    int i, rc;
+    int rc;
     int opt, opterr = 0;
     char *module_name = NULL;
     _repeat_count = -1;
@@ -212,16 +278,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    char* ptr;
-    i = 0;
-    ptr = strtok(module_name, ",");
-    _module_id[i++] = module_id(ptr);
-    while (ptr != NULL) {
-        ptr = strtok(module_name, ",");
-        if (ptr != NULL) {
-            _module_id[i++] = module_id(ptr);
-        }
-    }
+    prepare_module_info(module_name);
 /*
     _module_id = module_id(module_name);
     if (_module_id == 0) {
@@ -252,7 +309,7 @@ int main(int argc, char *argv[]) {
     }
 
     re_reset();
-    module_init(_module_id[0]);
+    module_init();
 
     if (optind == argc) {
         print_usage(stderr);
@@ -323,7 +380,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    module_mute(_module_id[0]);
+    module_mute();
 
     return EXIT_SUCCESS;
 }

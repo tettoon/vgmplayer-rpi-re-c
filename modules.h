@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 
+typedef struct module_info_t_ {
+    int slot_num;
+    int module_id;
+    int num;
+} module_info_t;
+
 void init_ym2608(int);
 
 void mute_ay8910(int);
