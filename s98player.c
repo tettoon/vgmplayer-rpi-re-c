@@ -10,7 +10,7 @@
 #include <zlib.h>
 #include <wiringPi.h>
 
-#include "vgm.h"
+#include "s98.h"
 #include "raspi_re.h"
 #include "modules.h"
 
@@ -23,23 +23,24 @@ static struct option longopts[] = {
 
 void print_usage(FILE *);
 void sigint_handler(int);
-int vgmplayer_play(FILE *, const char *);
+int s98player_play(FILE *, const char *);
 int copy_file(FILE *, FILE *);
+#if 0
 int gunzip_file(FILE *, FILE *);
+#endif
 
-module_info_t _module_info[MODULE_COUNT];
 int _repeat_count;
 
-vgm_t *vgm;
+s98_t *s98;
 
 void print_usage(FILE *f) {
 
-    fprintf(f, "Usage: vgmplayer [option] <vgm_file>\n");
+    fprintf(f, "Usage: s98player [option] <file>\n");
     fprintf(f, "\n");
     fprintf(f, "-h, --help          Print this message.\n");
     fprintf(f, "\n");
     fprintf(f, "-m <name>, --module=<name>\n");
-    fprintf(f, "                    Specify a module name.\n");
+    fprintf(f, "                    Specify a module name (comma separated).\n");
     fprintf(f, "                    e.g., AY8910, SN76489, YM2151, YM2413, YM2608, YM2612, YM3526, YM3812\n");
     fprintf(f, "-r <count>, --repeat=<count>\n");
     fprintf(f, "                    Specify a repeat count (>1).\n");
@@ -47,7 +48,7 @@ void print_usage(FILE *f) {
 }
 
 void sigint_handler(int sig) {
-    vgm->playing = 0;
+    s98->playing = 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -95,7 +96,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    vgm_handler = module_handler;
+    s98_handler = module_handler;
 
     rc = re_init();
     if (rc != 0)  {
@@ -143,8 +144,9 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        rc = vgmplayer_play(f, filename);
-        if (rc == VGM_EIDENT) {
+        rc = s98player_play(f, filename);
+#if 0
+        if (rc == S98_EIDENT) {
             rewind(f);
 
             FILE *f2 = tmpfile();
@@ -162,15 +164,18 @@ int main(int argc, char *argv[]) {
 
             fclose(f);
 
-            rc = vgmplayer_play(f2, filename);
-            if (rc != VGM_OK) {
+            rc = s98player_play(f2, filename);
+            if (rc != S98_OK) {
                 fclose(f2);
                 return EXIT_FAILURE;
             }
 
             fclose(f2);
-        } else if (rc != VGM_OK) {
-            vgm_perror(vgm, "xxx");
+        }
+#endif
+
+        if (rc != S98_OK) {
+            s98_perror(s98, "xxx");
             return EXIT_FAILURE;
         }
     }
@@ -215,6 +220,7 @@ int copy_file(FILE *f1, FILE *f2) {
     return 0;
 }
 
+#if 0
 int gunzip_file(FILE *f1, FILE *f2) {
 
     uint8_t *fbuf;
@@ -279,22 +285,23 @@ int gunzip_file(FILE *f1, FILE *f2) {
 
     return 0;
 }
+#endif
 
-int vgmplayer_play(FILE *f, const char *name) {
+int s98player_play(FILE *f, const char *name) {
 
     int rc;
     int fd;
     struct stat stbuf;
-    uint8_t *vgm_buf;
+    uint8_t *s98_buf;
 
     fd = fileno(f);
     fstat(fd, &stbuf);
 
-    vgm_buf = malloc(stbuf.st_size);
+    s98_buf = malloc(stbuf.st_size);
 
-    fread(vgm_buf, 1, stbuf.st_size, f);
+    fread(s98_buf, 1, stbuf.st_size, f);
     if (ferror(f) != 0) {
-        free(vgm_buf);
+        free(s98_buf);
         perror(name);
         return -1;
     }
@@ -302,24 +309,24 @@ int vgmplayer_play(FILE *f, const char *name) {
     // fclose(f);
 
     if (signal(SIGINT, sigint_handler) == SIG_ERR) {
-        free(vgm_buf);
+        free(s98_buf);
         perror(name);
         return -1;
     }
 
-    vgm = malloc(sizeof(vgm_t));
-    vgm->repeat = _repeat_count;
-    vgm_load(vgm_buf, stbuf.st_size, vgm);
+    s98 = malloc(sizeof(s98_t));
+    s98->repeat = _repeat_count;
+    s98_load(s98_buf, stbuf.st_size, s98);
 
-    rc = vgm_play(vgm);
+    rc = s98_play(s98);
     if (rc != 0) {
-        free(vgm);
-        free(vgm_buf);
+        free(s98);
+        free(s98_buf);
         return rc;
     }
 
-    free(vgm);
-    free(vgm_buf);
+    free(s98);
+    free(s98_buf);
 
     return 0;
 }

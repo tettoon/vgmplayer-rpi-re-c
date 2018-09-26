@@ -3,11 +3,33 @@
 
 #include <stdint.h>
 
+#define SN76489   0x50
+#define YM2413    0x51
+#define YM2612    0x52
+#define YM2151    0x54
+#define YM2203    0x55
+#define YM2608    0x56
+#define YM3812    0x5a
+#define YM3526    0x5b
+#define Y8950     0x5c
+#define YMF262    0x5e
+#define AY8910    0xa0
+#define OKIM6258  0xb7
+
+#define MODULE_COUNT 2
+
 typedef struct module_info_t_ {
     int slot_num;
     int module_id;
     int num;
 } module_info_t;
+
+void module_prepare_info(char *);
+int module_name_to_id(const char *);
+int module_name_to_slot(int, int);
+void module_handler(int, int, uint16_t, uint8_t);
+void module_init(void);
+void module_mute(void);
 
 void init_ym2608(int);
 
