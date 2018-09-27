@@ -225,14 +225,36 @@ int _s98_process_command(s98_t *s98, uint8_t *command) {
                 }
                 switch(*device_type)
                 {
-                    case 2:
+                    case S98_YM2149:
+                    case S98_AY8910:
+                        _s98_ay8910(s98, num, extend, aa, dd);
+                        break;
+                    case S98_YM2203:
                         _s98_ym2203(s98, num, extend, aa, dd);
                         break;
-                    case 4:
+                    case S98_YM2612:
+                        _s98_ym2612(s98, num, extend, aa, dd);
+                        break;
+                    case S98_YM2608:
                         _s98_ym2608(s98, num, extend, aa, dd);
                         break;
-                    case 5:
+                    case S98_YM2151:
                         _s98_ym2151(s98, num, extend, aa, dd);
+                        break;
+                    case S98_YM2413:
+                        _s98_ym2413(s98, num, extend, aa, dd);
+                        break;
+                    case S98_YM3526:
+                        _s98_ym3526(s98, num, extend, aa, dd);
+                        break;
+                    case S98_YM3812:
+                        _s98_ym3812(s98, num, extend, aa, dd);
+                        break;
+                    case S98_YMF262:
+                        _s98_ymf262(s98, num, extend, aa, dd);
+                        break;
+                    case S98_SN76489:
+                        _s98_sn76489(s98, num, extend, aa, dd);
                         break;
                 }
             }

@@ -36,13 +36,28 @@ void print_usage(FILE *f) {
 
     fprintf(f, "Usage: vgmplayer [option] <vgm_file>\n");
     fprintf(f, "\n");
-    fprintf(f, "-h, --help          Print this message.\n");
+    fprintf(f, "Options:\n");
     fprintf(f, "\n");
-    fprintf(f, "-m <name>, --module=<name>\n");
-    fprintf(f, "                    Specify a module name.\n");
-    fprintf(f, "                    e.g., AY8910, SN76489, YM2151, YM2413, YM2608, YM2612, YM3526, YM3812\n");
-    fprintf(f, "-r <count>, --repeat=<count>\n");
+    fprintf(f, "  -                 Read from STDIN.\n");
+    fprintf(f, "\n");
+    fprintf(f, "  -h, --help        Print this message.\n");
+    fprintf(f, "\n");
+    fprintf(f, "  -m <name>, --module=<name>\n");
+    fprintf(f, "                    Specify connected module names (comma separated).\n");
+    fprintf(f, "                    e.g. YM2151,YM2608\n");
+    fprintf(f, "  -r <count>, --repeat=<count>\n");
     fprintf(f, "                    Specify a repeat count (>1).\n");
+    fprintf(f, "\n");
+    fprintf(f, "Supported module names:\n");
+    fprintf(f, "\n");
+    fprintf(f, "  AY8910\n");
+    fprintf(f, "  SN76489\n");
+    fprintf(f, "  YM2151\n");
+    fprintf(f, "  YM2413\n");
+    fprintf(f, "  YM2608\n");
+    fprintf(f, "  YM2612\n");
+    fprintf(f, "  YM3526\n");
+    fprintf(f, "  YM3812\n");
     fprintf(f, "\n");
 }
 

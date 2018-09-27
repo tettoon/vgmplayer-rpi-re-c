@@ -25,6 +25,7 @@
 #define S98_AY8910  15
 #define S98_SN76489 16
 
+#if 0
 enum s98_device_type {
     NONE = 0,
     YM2149,
@@ -39,6 +40,7 @@ enum s98_device_type {
     AY8910 = 15,
     SN76489
 };
+#endif
 
 typedef struct s98_device_info_t_ {
     uint32_t device_type;              /* 0x00: */
