@@ -73,7 +73,9 @@ void s98_load(void *buf, size_t bufsz, s98_t *s98) {
     timer_info2 = s98->header->timer_info2;
     if (timer_info2 == 0) timer_info2 = 1000;
 
-    s98->frequency = (uint8_t) (1.0 / (timer_info / timer_info2));
+    s98->frequency = (uint32_t) (1.0 / (timer_info / timer_info2));
+
+    printf("timer_info=%f, timer_info2=%f, frequency=%d\n", timer_info, timer_info2, s98->frequency);
 
     _s98_seterr(s98, S98_OK);
 }
