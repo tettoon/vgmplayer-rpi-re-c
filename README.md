@@ -1,2 +1,2 @@
-# VGM Player for RasPi to RE interface (C Language Version)
+# VGM / S98 Player for RasPi to RE Module Interface (C Language Version)
 
