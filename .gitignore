@@ -1,5 +1,7 @@
 *.o
+*.s98
 *.vgm
 *.vgz
+s98player
 vgmplayer
 
