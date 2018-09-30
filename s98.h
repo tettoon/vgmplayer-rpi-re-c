@@ -1,5 +1,9 @@
-#ifndef __S98_H
-#define __S98_H
+#ifndef S98_H
+#define S98_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdio.h>
 #include <stdint.h>
@@ -87,5 +91,9 @@ int s98_error(s98_t *);
 void s98_perror(s98_t *, const char *);
 char * s98_strerror(int);
 
-#endif /* __S98_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif  /* S98_H */
 

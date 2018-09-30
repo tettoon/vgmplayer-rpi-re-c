@@ -1,5 +1,9 @@
-#ifndef __RASPI_RE_H
-#define __RASPI_RE_H
+#ifndef RASPI_RE_H
+#define RASPI_RE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -32,5 +36,9 @@ void re_ic(int);
 void re_cs0(int);
 void re_rd(int);
 
-#endif  /* __RASPI_RE_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif  /* RASPI_RE_H */
 

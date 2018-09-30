@@ -31,5 +31,5 @@ void m3u_rewind(m3u_t *);
 }
 #endif
 
-#endif // M3U_H
+#endif  /* M3U_H */
 

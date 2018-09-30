@@ -1,5 +1,9 @@
-#ifndef __VGM_H
-#define __VGM_H
+#ifndef VGM_H
+#define VGM_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdio.h>
 #include <stdint.h>
@@ -94,5 +98,9 @@ int vgm_error(vgm_t *);
 void vgm_perror(vgm_t *, const char *);
 char * vgm_strerror(int);
 
-#endif /* __VGM_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif  /* VGM_H */
 
