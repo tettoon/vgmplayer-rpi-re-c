@@ -11,7 +11,10 @@
 /* Static variables */
 
 static module_info_t _module_info[MODULE_COUNT];
+
+#if 0
 static uint8_t *_y8950_reg_b0[9];
+#endif
 
 /* Functions */
 

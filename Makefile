@@ -1,7 +1,7 @@
 # Makefile
 
-S98PLAYER_OBJS := s98player.o m3u.o s98.o raspi_re.o modules.o
-VGMPLAYER_OBJS := vgmplayer.o vgm.o raspi_re.o modules.o
+S98PLAYER_OBJS := s98player.o m3u.o s98.o raspi_re.o modules.o util.o
+VGMPLAYER_OBJS := vgmplayer.o vgm.o raspi_re.o modules.o util.o
 CC := gcc
 CFLAGS := -Wall -O2 -I.
 LDFLAGS := -pthread -lrt -lz -lwiringPi

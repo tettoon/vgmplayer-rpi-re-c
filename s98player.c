@@ -10,6 +10,7 @@
 #include <zlib.h>
 #include <wiringPi.h>
 
+#include "util.h"
 #include "m3u.h"
 #include "s98.h"
 #include "raspi_re.h"
@@ -28,7 +29,6 @@ void sigint_handler(int);
 int play(const char *);
 int playlist(const char *);
 int s98player_play(FILE *, const char *);
-int copy_file(FILE *, FILE *);
 
 int _repeat_count;
 
@@ -143,41 +143,6 @@ int main(int argc, char *argv[]) {
     module_mute();
 
     return EXIT_SUCCESS;
-}
-
-int copy_file(FILE *f1, FILE *f2) {
-
-    uint8_t *fbuf;
-    size_t sz;
-
-    fbuf = (uint8_t *) malloc(65536);
-
-    while(1) {
-        if (feof(f1) != 0)
-            break;
-
-        sz = fread(fbuf, 1, 65536, f1);
-        if (ferror(f1) != 0)
-            break;
-
-        sz = fwrite(fbuf, 1, sz, f2);
-        if (ferror(f2) != 0)
-            break;
-    }
-
-    if (fflush(f2) != 0) {
-        free(fbuf);
-        return -1;
-    }
-
-    free(fbuf);
-
-    if (ferror(f1) != 0 || ferror(f2) != 0)
-        return -1;
-
-    rewind(f2);
-
-    return 0;
 }
 
 int playlist(const char *filename) {
