@@ -10,12 +10,15 @@
 #include <zlib.h>
 #include <wiringPi.h>
 
+#include "util.h"
+#include "m3u.h"
 #include "s98.h"
 #include "raspi_re.h"
 #include "modules.h"
 
 static struct option longopts[] = {
     {"help", no_argument, NULL, 'h'},
+    {"playlist", required_argument, NULL, 'l'},
     {"module", required_argument, NULL, 'm'},
     {"repeat", required_argument, NULL, 'r'},
     {0, 0, 0, 0}
@@ -23,34 +26,33 @@ static struct option longopts[] = {
 
 void print_usage(FILE *);
 void sigint_handler(int);
+int play(const char *);
+int playlist(const char *);
 int s98player_play(FILE *, const char *);
-int copy_file(FILE *, FILE *);
-#if 0
-int gunzip_file(FILE *, FILE *);
-#endif
 
 int _repeat_count;
 
+int m3u_playing;
 s98_t *s98;
 
 void print_usage(FILE *f) {
 
-    fprintf(f, "Usage: s98player [option] <file>\n");
+    fprintf(f, "Usage: s98player [OPTION] [FILE|-]\n");
     fprintf(f, "\n");
     fprintf(f, "Options:\n");
     fprintf(f, "\n");
-    fprintf(f, "  -                 Read from STDIN.\n");
-    fprintf(f, "\n");
     fprintf(f, "  -h, --help        Print this message.\n");
     fprintf(f, "\n");
-    fprintf(f, "  -m <name>, --module=<name>\n");
+    fprintf(f, "  -l FILE, --playlist=FILE\n");
+    fprintf(f, "                    Use a M3U playlist.\n");
+    fprintf(f, "\n");
+    fprintf(f, "  -m NAME0[,NAME1], --module=NAME0[,NAME1]\n");
     fprintf(f, "                    Specify connected module names (comma separated).\n");
-    // fprintf(f, "                    e.g., AY8910, SN76489, YM2151, YM2203, YM2413, YM2608, YM2612, YM3526, YM3812, YMF262\n");
     fprintf(f, "                    e.g. YM2151,YM2608\n");
-    fprintf(f, "  -r <count>, --repeat=<count>\n");
+    fprintf(f, "  -r COUNT, --repeat=COUNT\n");
     fprintf(f, "                    Specify a repeat count (>1).\n");
     fprintf(f, "\n");
-    fprintf(f, "Supported modules:\n");
+    fprintf(f, "Supported module names:\n");
     fprintf(f, "\n");
     fprintf(f, "  YM2151\n");
     fprintf(f, "  YM2608\n");
@@ -59,20 +61,25 @@ void print_usage(FILE *f) {
 
 void sigint_handler(int sig) {
     s98->playing = 0;
+    m3u_playing = 0;
 }
 
 int main(int argc, char *argv[]) {
 
     int rc;
     int opt, opterr = 0;
+    char *m3u_filename = NULL;
     char *module_name = NULL;
     _repeat_count = -1;
 
-    while ((opt = getopt_long(argc, argv, "hm:r:", longopts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "hl:m:r:", longopts, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_usage(stdout);
                 return 0;
+            case 'l':
+                m3u_filename = optarg;
+                break;
             case 'm':
                 module_name = optarg;
                 break;
@@ -117,76 +124,17 @@ int main(int argc, char *argv[]) {
     re_reset();
     module_init();
 
-    if (optind == argc) {
-        print_usage(stderr);
-        return EXIT_FAILURE;
-    }
-
-    FILE *f;
-    char *filename;
-    for (int i = optind; i < argc; i++) {
-        if (strcmp("-", argv[i]) == 0) {
-            filename = "tmpfile()";
-
-            f = tmpfile();
-            if (!f) {
-                perror(filename);
-                return EXIT_FAILURE;
-            }
-
-            copy_file(stdin, f);
-            if (ferror(stdin) != 0) {
-                perror("stdin");
-                return EXIT_FAILURE;
-            }
-            else
-            if (ferror(f) != 0) {
-                perror(filename);
-                return EXIT_FAILURE;
-            }
-        } else {
-            filename = argv[i];
-
-            f = fopen(filename, "rb");
-            if (!f) {
-                perror(filename);
-                return EXIT_FAILURE;
-            }
-        }
-
-        rc = s98player_play(f, filename);
-#if 0
-        if (rc == S98_EIDENT) {
-            rewind(f);
-
-            FILE *f2 = tmpfile();
-
-            rc = gunzip_file(f, f2);
-            if (ferror(f) != 0) {
-                perror(filename);
-                return EXIT_FAILURE;
-            }
-            else
-            if (ferror(f2) != 0) {
-                perror(filename);
-                return EXIT_FAILURE;
-            }
-
-            fclose(f);
-
-            rc = s98player_play(f2, filename);
-            if (rc != S98_OK) {
-                fclose(f2);
-                return EXIT_FAILURE;
-            }
-
-            fclose(f2);
-        }
-#endif
-
-        if (rc != S98_OK) {
-            s98_perror(s98, "xxx");
+    if (m3u_filename != NULL) {
+        if (_repeat_count < 1)
+            _repeat_count = 1;
+        playlist(m3u_filename);
+    } else {
+        if (optind == argc) {
+            print_usage(stderr);
             return EXIT_FAILURE;
+        }
+        for (int i = optind; i < argc; i++) {
+            play(argv[i]);
         }
     }
 
@@ -195,107 +143,98 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-int copy_file(FILE *f1, FILE *f2) {
+int playlist(const char *filename) {
 
-    uint8_t *fbuf;
-    size_t sz;
+    char *path;
+    char *p;
+    int dir_len, base_len;
 
-    fbuf = (uint8_t *) malloc(65536);
+    FILE *f;
+    m3u_t *m3u;
+    m3u_entry_t *m3u_entry;
+    int rc;
 
-    while(1) {
-        if (feof(f1) != 0)
-            break;
+    m3u = m3u_open(filename);
+    dir_len = strlen(m3u->dir);
+    m3u_playing = 1;
+    while (m3u_playing != 0) {
+        m3u_entry = m3u_next(m3u);
+        if (m3u_entry == NULL) {
+            m3u_rewind(m3u);
+            continue;
+        }
 
-        sz = fread(fbuf, 1, 65536, f1);
-        if (ferror(f1) != 0)
-            break;
+        base_len = strlen(m3u_entry->path);
+        path = malloc(sizeof(char) * (dir_len + 1 + base_len + 1));
+        p = path;
+        strcpy(p, m3u->dir);
+        p += dir_len;
+        *p = '/';
+        p += 1; 
+        strcpy(p, m3u_entry->path);
+        p += base_len;
+        *p = '\0';
 
-        sz = fwrite(fbuf, 1, sz, f2);
-        if (ferror(f2) != 0)
-            break;
+        f = fopen(path, "rb");
+        if (!f) {
+            perror(path);
+            return EXIT_FAILURE;
+        }
+
+        rc = s98player_play(f, path);
+        if (rc != S98_OK) {
+            s98_perror(s98, path);
+            return EXIT_FAILURE;
+        }
+
+        module_mute();
     }
 
-    if (fflush(f2) != 0) {
-        free(fbuf);
-        return -1;
-    }
+    m3u_playing = 0;
+    m3u_close(m3u);
 
-    free(fbuf);
-
-    if (ferror(f1) != 0 || ferror(f2) != 0)
-        return -1;
-
-    rewind(f2);
-
-    return 0;
+    return EXIT_SUCCESS;
 }
 
-#if 0
-int gunzip_file(FILE *f1, FILE *f2) {
+int play(const char *filename) {
 
-    uint8_t *fbuf;
     int rc;
-    int fd1;
-    gzFile gzf;
+    FILE *f;
 
-    fbuf = (uint8_t *) malloc(8192);
-    if (fbuf == NULL) {
-        fprintf(stderr, "malloc() failed\n");
-        return -1;
-    }
+    if (strcmp("-", filename) == 0) {
+        f = tmpfile();
+        if (!f) {
+            perror(filename);
+            return EXIT_FAILURE;
+        }
 
-    fd1 = fileno(f1);
-    lseek(fd1, 0, SEEK_SET);
-    gzf = gzdopen(fd1, "rb");
-    if (gzf == NULL) {
-        printf("gzf == NULL\n");
-        free(fbuf);
-        return -1;
-    }
-
-    while(1) {
-        if ((rc = gzread(gzf, fbuf, 8192)) == -1) {
-            const char *msg = gzerror(gzf, &rc);
-            if (rc == Z_ERRNO)
-                msg = strerror(rc);
-            fprintf(stderr, "zlib error: %s\n", msg);
-            break;
+        copy_file(stdin, f);
+        if (ferror(stdin) != 0) {
+            perror("stdin");
+            return EXIT_FAILURE;
         }
         else
-        if (rc == 0) {
-            break;
+        if (ferror(f) != 0) {
+            perror(filename);
+            return EXIT_FAILURE;
         }
-
-        fwrite(fbuf, 1, rc, f2);
-        if (ferror(f2) != 0) {
-            return -1;
-        }
+    } else {
+        f = fopen(filename, "rb");
     }
 
-    if ((rc = gzclose(gzf)) != Z_OK) {
-        free(fbuf);
-        const char *msg = gzerror(gzf, &rc);
-        if (rc == Z_ERRNO)
-            msg = strerror(rc);
-        fprintf(stderr, "zlib error: %s\n", msg);
-        return -1;
+    if (!f) {
+        perror(filename);
+        return EXIT_FAILURE;
     }
 
-    if (fflush(f2) != 0) {
-        free(fbuf);
-        return -1;
+    rc = s98player_play(f, filename);
+    if (rc != S98_OK) {
+        s98_perror(s98, filename);
+        return EXIT_FAILURE;
     }
 
-    free(fbuf);
-
-    if (ferror(f1) != 0 || ferror(f2) != 0)
-        return -1;
-
-    rewind(f2);
-
-    return 0;
+    return EXIT_SUCCESS;
 }
-#endif
 
 int s98player_play(FILE *f, const char *name) {
 
@@ -316,7 +255,7 @@ int s98player_play(FILE *f, const char *name) {
         return -1;
     }
 
-    // fclose(f);
+    fclose(f);
 
     if (signal(SIGINT, sigint_handler) == SIG_ERR) {
         free(s98_buf);

@@ -1,5 +1,9 @@
-#ifndef __MODULES_H
-#define __MODULES_H
+#ifndef MODULES_H
+#define MODULES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -55,5 +59,9 @@ void write_ym2612(int, int, uint8_t, uint8_t);
 void write_ym3526(int, uint8_t, uint8_t);
 void write_ym3812(int, uint8_t, uint8_t);
 
-#endif  /* __MODULES_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif  /* MODULES_H */
 
