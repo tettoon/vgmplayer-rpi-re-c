@@ -51,6 +51,13 @@ m3u_t *m3u_open(const char *filename) {
         while (size > 0 && (line[size - 1] == '\0' || line[size - 1] == '\n' || line[size - 1] == '\r')) {
             line[--size] = '\0';
         }
+
+        if (size == 0)
+            continue;
+
+        if (line[0] == '#')
+            continue;
+
         entry = &m3u->entries[m3u->size++];
         strncpy(entry->path, line, M3U_STRING_SIZE);
         entry->title[0] = '\0';

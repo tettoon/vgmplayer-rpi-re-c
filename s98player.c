@@ -37,24 +37,22 @@ s98_t *s98;
 
 void print_usage(FILE *f) {
 
-    fprintf(f, "Usage: s98player [option] <file>\n");
+    fprintf(f, "Usage: s98player [OPTION] [FILE|-]\n");
     fprintf(f, "\n");
     fprintf(f, "Options:\n");
     fprintf(f, "\n");
-    fprintf(f, "  -                 Read from STDIN.\n");
-    fprintf(f, "\n");
     fprintf(f, "  -h, --help        Print this message.\n");
     fprintf(f, "\n");
-    fprintf(f, "  -l, --playlist <file>\n");
+    fprintf(f, "  -l FILE, --playlist=FILE\n");
     fprintf(f, "                    Use a M3U playlist.\n");
     fprintf(f, "\n");
-    fprintf(f, "  -m <name>, --module=<name>\n");
+    fprintf(f, "  -m NAME0[,NAME1], --module=NAME0[,NAME1]\n");
     fprintf(f, "                    Specify connected module names (comma separated).\n");
     fprintf(f, "                    e.g. YM2151,YM2608\n");
-    fprintf(f, "  -r <count>, --repeat=<count>\n");
+    fprintf(f, "  -r COUNT, --repeat=COUNT\n");
     fprintf(f, "                    Specify a repeat count (>1).\n");
     fprintf(f, "\n");
-    fprintf(f, "Supported modules:\n");
+    fprintf(f, "Supported module names:\n");
     fprintf(f, "\n");
     fprintf(f, "  YM2151\n");
     fprintf(f, "  YM2608\n");
@@ -217,7 +215,7 @@ int play(const char *filename) {
         }
         else
         if (ferror(f) != 0) {
-            perror("tmpfile()");
+            perror(filename);
             return EXIT_FAILURE;
         }
     } else {
