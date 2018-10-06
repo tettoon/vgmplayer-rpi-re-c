@@ -21,11 +21,13 @@ static struct option longopts[] = {
     {"playlist", required_argument, NULL, 'l'},
     {"module", required_argument, NULL, 'm'},
     {"repeat", required_argument, NULL, 'r'},
+    {"version", no_argument, NULL, 'v'},
     {0, 0, 0, 0}
 };
 
+void print_version(void);
 void print_usage(FILE *);
-void sigint_handler(int);
+void signal_handler(int);
 int play(const char *);
 int playlist(const char *);
 int vgmplayer_play(FILE *, const char *);
@@ -34,6 +36,10 @@ int _repeat_count;
 
 int m3u_playing;
 vgm_t *vgm;
+
+void print_version(void) {
+    printf("VGM Player for RasPi to RE Module Interface Version 1.21\n");
+}
 
 void print_usage(FILE *f) {
 
@@ -49,8 +55,11 @@ void print_usage(FILE *f) {
     fprintf(f, "  -m NAME0[,NAME1]  --module=NAME0[,NAME1]\n");
     fprintf(f, "                    Specify connected module names (comma separated).\n");
     fprintf(f, "                    e.g. YM2151,YM2608\n");
+    fprintf(f, "\n");
     fprintf(f, "  -r COUNT  --repeat=COUNT\n");
     fprintf(f, "                    Specify a repeat count (>1).\n");
+    fprintf(f, "\n");
+    fprintf(f, "  -v  --version     Print version.\n");
     fprintf(f, "\n");
     fprintf(f, "Supported module names:\n");
     fprintf(f, "\n");
@@ -65,9 +74,11 @@ void print_usage(FILE *f) {
     fprintf(f, "\n");
 }
 
-void sigint_handler(int sig) {
+void signal_handler(int sig) {
+    if (m3u_playing != 0 && sig != SIGQUIT) {
+        m3u_playing = 0;
+    }
     vgm->playing = 0;
-    m3u_playing = 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -78,11 +89,11 @@ int main(int argc, char *argv[]) {
     char *module_name = NULL;
     _repeat_count = -1;
 
-    while ((opt = getopt_long(argc, argv, "hl:m:r:", longopts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "hl:m:r:v", longopts, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_usage(stdout);
-                return 0;
+                return EXIT_SUCCESS;
             case 'l':
                 m3u_filename = optarg;
                 break;
@@ -95,6 +106,9 @@ int main(int argc, char *argv[]) {
                     return EXIT_FAILURE;
                 }
                 break;
+            case 'v':
+                print_version();
+                return EXIT_SUCCESS;
             default:
                 opterr = 1;
                 break;
@@ -268,6 +282,7 @@ int vgmplayer_play(FILE *f, const char *name) {
     int fd;
     struct stat stbuf;
     uint8_t *vgm_buf;
+    struct sigaction act, old;
 
     fd = fileno(f);
     fstat(fd, &stbuf);
@@ -283,7 +298,15 @@ int vgmplayer_play(FILE *f, const char *name) {
 
     // fclose(f);
 
-    if (signal(SIGINT, sigint_handler) == SIG_ERR) {
+    act.sa_handler = signal_handler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_RESTART;
+    if (sigaction(SIGINT, &act, &old) < 0) {
+        free(vgm_buf);
+        perror(name);
+        return -1;
+    }
+    if (sigaction(SIGQUIT, &act, &old) < 0) {
         free(vgm_buf);
         perror(name);
         return -1;
