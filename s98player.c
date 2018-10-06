@@ -38,7 +38,7 @@ int m3u_playing;
 s98_t *s98;
 
 void print_version(void) {
-    printf("S98 Player for RasPi to RE Module Interface Version 1.21\n");
+    printf("S98 Player for RasPi to RE Module Interface Version 1.2.1\n");
 }
 
 void print_usage(FILE *f) {
