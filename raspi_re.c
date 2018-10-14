@@ -107,9 +107,10 @@ void re_write_data(uint8_t data) {
  */
 uint8_t re_read_data() {
 
+    int i;
     uint8_t dd = 0;
 
-    for (int i = (sizeof PIN_D / sizeof PIN_D[0]) - 1; i >= 0; i--) {
+    for (i = (sizeof PIN_D / sizeof PIN_D[0]) - 1; i >= 0; i--) {
         if (_re_data_direction == OUTPUT) {
             pinMode(PIN_D[i], INPUT);
             pullUpDnControl(PIN_D[i], PUD_UP);
