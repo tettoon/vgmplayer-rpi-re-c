@@ -436,31 +436,32 @@ void write_ym2413(int n, uint8_t aa, uint8_t dd) {
 void write_ym2608(int n, int pp, uint8_t aa, uint8_t dd) {
 
     re_cs0(n & 1);
+    delayMicroseconds(1);
 
     re_address(pp << 1);
     re_write_data(aa);
     delayMicroseconds(1);
-    // re_cs0(n & 1);
     re_wr(0);
-    delayMicroseconds(1);
+    delayMicroseconds(2);
     re_wr(1);
-    // re_cs0(!(n & 1));
+    delayMicroseconds(2);
     if (aa >=0x21 && aa <= 0xb6) {
         delayMicroseconds(3);  /* FM: 17 cycles */
     }
     else
-    if (pp == 0 && (aa >= 0x10 && aa <= 0x1d)) {
-        delayMicroseconds(3);  /* Rhythm: 17 cycles */
+    if (pp == 0) {
+        if (aa >= 0x10 && aa <= 0x1d) {
+            delayMicroseconds(3);  /* Rhythm: 17 cycles */
+        }
     }
 
     re_address((pp << 1) | 1);
     re_write_data(dd);
     delayMicroseconds(1);
-    // re_cs0(n & 1);
     re_wr(0);
-    delayMicroseconds(1);
+    delayMicroseconds(2);
     re_wr(1);
-    // re_cs0(!(n & 1));
+    delayMicroseconds(2);
     if (aa >= 0x21 && aa <= 0x9e) {
         delayMicroseconds(12);  /* FM: 83 cycles */
     }
