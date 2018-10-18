@@ -451,7 +451,8 @@ void write_ym2608(int n, int pp, uint8_t aa, uint8_t dd) {
     else
     if (pp == 0) {
         if (aa >= 0x10 && aa <= 0x1d) {
-            delayMicroseconds(3);  /* Rhythm: 17 cycles */
+            // delayMicroseconds(3);  /* Rhythm: 17 cycles */
+            delayMicroseconds(10);  /* Rhythm: 17 cycles */
         }
     }
 
@@ -472,13 +473,15 @@ void write_ym2608(int n, int pp, uint8_t aa, uint8_t dd) {
     else
     if (pp == 0) {
         if (aa == 0x10) {
-            // delayMicroseconds(75);  /* Rhythm: 576 cycles */
-            delayMicroseconds(100);  /* Rhythm: 576 cycles */
+            /* Rhythm: 576 cycles */
+            // delayMicroseconds(75);
+            delayMicroseconds(225);
         }
         else
         if (aa >= 0x11 && aa <= 0x1d) {
-            // delayMicroseconds(12);  /* Rhythm: 83 cycles */
-            delayMicroseconds(18);  /* Rhythm: 83 cycles */
+            /* Rhythm: 83 cycles */
+            // delayMicroseconds(12);
+            delayMicroseconds(36);
         }
     }
 }
