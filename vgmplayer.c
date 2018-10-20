@@ -38,7 +38,7 @@ int m3u_playing;
 vgm_t *vgm;
 
 void print_version(void) {
-    printf("VGM Player for RasPi to RE Module Interface Version 1.2.1\n");
+    printf("VGM Player for RasPi to RE Module Interface Version 1.2.2\n");
 }
 
 void print_usage(FILE *f) {

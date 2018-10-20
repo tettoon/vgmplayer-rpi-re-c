@@ -435,52 +435,54 @@ void write_ym2413(int n, uint8_t aa, uint8_t dd) {
 
 void write_ym2608(int n, int pp, uint8_t aa, uint8_t dd) {
 
+    re_cs0(n & 1);
+    delayMicroseconds(1);
+
     re_address(pp << 1);
     re_write_data(aa);
-    delayMicroseconds(1);
-    re_cs0(n & 1);
+    delayMicroseconds(2);
     re_wr(0);
-    delayMicroseconds(1);
+    delayMicroseconds(10);
     re_wr(1);
-    re_cs0(!(n & 1));
+    delayMicroseconds(5);
     if (aa >=0x21 && aa <= 0xb6) {
-        delayMicroseconds(3);  /* 17 cycles */
+        delayMicroseconds(3);  /* FM: 17 cycles */
     }
     else
-    if (pp == 0 && (aa >= 0x10 && aa <= 0x1d)) {
-        delayMicroseconds(3);  /* 17 cycles */
-    }
-    else
-    {
-        delayMicroseconds(10);
+    if (pp == 0) {
+        if (aa >= 0x10 && aa <= 0x1d) {
+            // delayMicroseconds(3);  /* Rhythm: 17 cycles */
+            delayMicroseconds(10);  /* Rhythm: 17 cycles */
+        }
     }
 
     re_address((pp << 1) | 1);
     re_write_data(dd);
-    delayMicroseconds(1);
-    re_cs0(n & 1);
+    delayMicroseconds(2);
     re_wr(0);
-    delayMicroseconds(1);
+    delayMicroseconds(10);
     re_wr(1);
-    re_cs0(!(n & 1));
+    delayMicroseconds(5);
     if (aa >= 0x21 && aa <= 0x9e) {
-        delayMicroseconds(12);  /* 83 cycles */
+        delayMicroseconds(12);  /* FM: 83 cycles */
     }
     else
     if (aa >= 0xa0 && aa <= 0xb6) {
-        delayMicroseconds(6);  /* 47 cycles */
+        delayMicroseconds(6);  /* FM: 47 cycles */
     }
     else
-    if (pp == 0 && aa == 0x10) {
-        delayMicroseconds(75);  /* 576 cycles */
-    }
-    else
-    if (pp == 0 && (aa >= 0x11 && aa <= 0x1d)) {
-        delayMicroseconds(12);  /* 83 cycles */
-    }
-    else
-    {
-        delayMicroseconds(10);
+    if (pp == 0) {
+        if (aa == 0x10) {
+            /* Rhythm: 576 cycles */
+            // delayMicroseconds(75);
+            delayMicroseconds(225);
+        }
+        else
+        if (aa >= 0x11 && aa <= 0x1d) {
+            /* Rhythm: 83 cycles */
+            // delayMicroseconds(12);
+            delayMicroseconds(36);
+        }
     }
 }
 
