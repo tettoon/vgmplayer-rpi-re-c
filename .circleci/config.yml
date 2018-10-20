@@ -1,0 +1,14 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: resin/rpi-raspbian:stretch-20181017
+    steps:
+      - checkout
+      - run:
+          name: Prerequisites
+          command: apt-get install wiringpi
+      - run:
+          name: Compile
+          command: make
+
