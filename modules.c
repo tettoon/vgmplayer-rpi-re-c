@@ -395,21 +395,34 @@ void write_ym2151(int n, uint8_t aa, uint8_t dd) {
 
 void write_ym2203(int n, uint8_t aa, uint8_t dd) {
 
+    re_cs0(n & 1);
+    delayMicroseconds(1);
+
     re_address(0);
     re_write_data(aa);
-    re_cs0(n & 1);
+    delayMicroseconds(2);
     re_wr(0);
-    re_wr(1);
-    re_cs0(!(n & 1));
     delayMicroseconds(10);
+    re_wr(1);
+    delayMicroseconds(5);
+    if (aa >=0x21 && aa <= 0xb6) {
+        delayMicroseconds(10);  /* FM: 17 cycles */
+    }
 
     re_address(1);
     re_write_data(dd);
-    re_cs0(n & 1);
+    delayMicroseconds(2);
     re_wr(0);
+    delayMicroseconds(10);
     re_wr(1);
-    re_cs0(!(n & 1));
-    delayMicroseconds(20);
+    delayMicroseconds(5);
+    if (aa >= 0x21 && aa <= 0x9e) {
+        delayMicroseconds(72);  /* FM: 83 cycles */
+    }
+    else
+    if (aa >= 0xa0 && aa <= 0xb6) {
+        delayMicroseconds(36);  /* FM: 47 cycles */
+    }
 }
 
 void write_ym2413(int n, uint8_t aa, uint8_t dd) {
