@@ -64,6 +64,7 @@ void print_usage(FILE *f) {
     fprintf(f, "Supported module names:\n");
     fprintf(f, "\n");
     fprintf(f, "  YM2151\n");
+    fprintf(f, "  YM2203\n");
     fprintf(f, "  YM2608\n");
     fprintf(f, "\n");
 }
